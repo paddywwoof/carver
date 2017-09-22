@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <widget xmlns = "http://www.w3.org/ns/widgets"
-  id = "com.transcendentalfruit.geo"
+  id = "com.transcendentalfruit.carver"
   version = "0.0.1" >
   <platform name="android">
     <icon src="res/android/icon.png" density="hdpi" />
