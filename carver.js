@@ -1,53 +1,33 @@
 //<script type="javascript">
-var ctx = document.getElementById("myCanvas").getContext("2d");
-var W = 0.98 * Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-var H = 0.6 * Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-ctx.canvas.width  = W;
-ctx.canvas.height = H;
-var grdnt;
-generateRainbow();
-ctx.strokeStyle = "red";
-ctx.font = "30px Arial";
+var bell = document.querySelector('.bell');
+var horn = document.querySelector('.horn');
+
 var diptxt = document.querySelector('.diptxt');
 var logtxt = document.querySelector('.logtxt');
-logtxt.innerHTML = "";
+diptxt.innerHTML = "<<oo>>";
+logtxt.innerHTML = "---";
 
-var xrs = [], yrs = [];
+var xrs = [], yrs = [], zrs = [];
 var zcrs = [], zsrs = []; // hold as cos and sin to avoid jump 359 -> 0
 var xs = [], ys = [], zs = [];
+var yaw = [];
 var xadj = 0.0, yadj = 0.0, zadj = 0.0; // angle offsets
 var gxadj = 0.0, gyadj = 0.0; // g component offsets
 
-var g, g_prev; // unit vector straight down
+var q; // quaternion position of phone
 var h; // unit vector horizontal in plane of phone
-var m, m_prev; // unit vector pointing magnetic north horizontally
-var stk = 0.0;
-var stk180 = 0.0;
-var dip = 0.0;
-var cpoints = ["N","NE","E","SE","S","SW","W","NW"];
 var latitude; var longitude; var altitude;
-
-function generateRainbow() {
-  ////////////////////////////////////////////////////////////////
-  grdnt = ctx.createLinearGradient(0, -0.5 * H, 0, 0.5 * H);
-  for (var i=0; i<6; i++) {
-    var clr = '#';
-    for (var j=0; j<3; j++) {clr += Math.floor((Math.random() * 239.999) + 16).toString(16);}
-    grdnt.addColorStop(i / 6.0, clr); 
-  }
-  ctx.fillStyle = grdnt;
-}
+var last_tm = 0;
+var WAIT = 100;
+var logOn = false;
+var nAlert = 0;
 
 function logReading() {
   ////////////////////////////////////////////////////////////////
-  var dt = new Date();
-  //navigator.geolocation.getCurrentPosition(onSuccess, onError); //doesn't seem to work on android
-  //watchPosition set instead
-  logtxt.innerHTML += " strike: " + stk.toFixed(1)
-                   + stk180 + " dip: " + dip.toFixed(1) + "\n.... "
-                   + dt.toLocaleString()
-                   + " lat: " + latitude + " lon: " + longitude + " alt: " + altitude + "\n";
-  generateRainbow();
+  logOn = !logOn;
+  if (logOn) {
+    logtxt.innerHTML = "";
+  }
 }
 
 function calibrate() {
@@ -61,8 +41,8 @@ function calibrate() {
 
 function medianMean(arr, val) {
   // return median of values /////////////////////////////////////
-  var NUM = 25;
-  var END = 3;
+  var NUM = 15;
+  var END = 2;
   if (arr.unshift(val) > NUM) {
     arr.pop();
   }
@@ -87,17 +67,18 @@ function cross(a, b) {
   return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 }
 
-function triple_product(a, b, c) {
+function tripleProduct(a, b, c) {
   // triple product (a X b) . c //////////////////////////////////
   return a[1] * b[2] * c[0] - a[2] * b[1] * c[0] + 
          a[2] * b[0] * c[1] - a[0] * b[2] * c[1] +
          a[0] * b[1] * c[2] - a[1] * b[0] * c[2];
 }
 
-function norm(a) {
-  // normalize a 3D vector ///////////////////////////////////////
-  var mag = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2));
-  return [a[0] / mag, a[1] / mag, a[2] / mag];
+function normalize(a) {
+  // normalize an nD vector //////////////////////////////////////
+  var mag = Math.sqrt(a.reduce(function(sum, cur) {
+                                  return sum + cur * cur;}, 0.0));
+  return a.map(function(x) {return x / mag;});
 }
 
 function taitBryan(a, x, y, z) {
@@ -117,73 +98,80 @@ function taitBryan(a, x, y, z) {
           (sx * sz - cx * cz * sy) * a[0] + (cz * sx + cx * sy * sz) * a[1] + (cx * cy) * a[2]]
 }
 
-function handleOrientation(event) {
+function taitBryanToQuat(x, y, z) {
+  // return quaternion as vec4 using Tait Bryan Z,X',Y'' x,y,z in degrees
+  ////////////////////////////////////////////////////////////////
+  var radfact = Math.PI / 360.0; // to radians and x 0.5
+  x *= radfact;
+  y *= radfact;
+  z *= radfact;
+  sx = Math.sin(x);
+  cx = Math.cos(x);
+  sy = Math.sin(y);
+  cy = Math.cos(y);
+  sz = Math.sin(z);
+  cz = Math.cos(z);
+  return [cx * cy * cz - sx * sy * sz,
+          sx * cy * cz - cx * sy * sz,
+          cx * sy * cz + sx * cy * sz,
+          cx * cy * sz + sx * sy * cz];
+}
+
+function divQuat(p, q) {
+  // return quaternion pq^-1 i.e. p divided by q. The result is a
+  // quaternion representing the rotation FROM q TO p
+  ////////////////////////////////////////////////////////////////
+  var normSq = q.reduce(function(sum, cur) {return sum + cur * cur;}, 0.0);
+
+  if (normSq === 0) {
+    return [0.0, 0.0, 0.0, 0.0];
+  }
+
+  normSq = 1 / normSq;
+
+  return [(p[0] * q[0] + p[1] * q[1] + p[2] * q[2] + p[3] * q[3]) * normSq,
+          (p[1] * q[0] - p[0] * q[1] - p[2] * q[3] + p[3] * q[2]) * normSq,
+          (p[2] * q[0] - p[0] * q[2] - p[3] * q[1] + p[1] * q[3]) * normSq,
+          (p[3] * q[0] - p[0] * q[3] - p[1] * q[2] + p[2] * q[1]) * normSq];
+}
+
+function axisAngle(q_in) {
+  // return vec4 representing angle in radians then x,y,z vector as axis
+  ////////////////////////////////////////////////////////////////
+  var q = normalize(q_in); // leave original array intact
+  var angle = 2.0 * Math.acos(q[0]);
+  var axis = normalize(q.slice(1)); // just the x,y,z components
+  return [angle, axis[0], axis[1], axis[2]];
+}
+
+function handleMotion(event) {
   // rotation accelerometer and magnetometer changes /////////////
   ////////////////////////////////////////////////////////////////
-  var x = medianMean(xrs, event.beta) - xadj;
-  var y = medianMean(yrs, event.gamma) - yadj;
-  var a = event.alpha * Math.PI / 180.0;
-  var z = Math.atan2(medianMean(zsrs, Math.sin(a)), medianMean(zcrs, Math.cos(a))) - zadj;
-  z = (630.0 - z * 180.0 / Math.PI) % 360.0;
-  m = taitBryan([0, -1, 0], x, y, z);
-  g = taitBryan([0, 0, 1], x, y, z);
-  if (m_prev !== undefined) {
-    var rot = triple_product(m, m_prev, g);
-    diptxt.innerHTML = "- rotation: " + rot.toFixed(1);
+  var rx = medianMean(xrs, event.rotationRate.beta);
+  var ry = medianMean(yrs, event.rotationRate.gamma);
+  var rz = medianMean(zrs, event.rotationRate.alpha);
+  var x = medianMean(xs, event.accelerationIncludingGravity.x);
+  var y = medianMean(ys, event.accelerationIncludingGravity.y);
+  var z = medianMean(zs, event.accelerationIncludingGravity.z);
+  q = taitBryanToQuat(rx, ry, rz);
+  var d = new Date();
+  var tm = d.getTime();
+  if (tm > (last_tm + WAIT)) {
+    var ax_a = axisAngle(q);
+    var av_yaw = medianMean(yaw, 1000.0 * ax_a[0] * dot([x, y, z], [ax_a[3], ax_a[1], ax_a[2]]) / (tm - last_tm));
+    diptxt.innerHTML = ">> yaw: " + av_yaw.toFixed(2);
+    if (av_yaw > 0.66 && bell.ended && horn.ended) {
+      bell.volume = av_yaw * 0.25;
+      bell.play();
+    } else if (av_yaw < -0.66 && bell.ended && horn.ended) {
+      horn.volume = -av_yaw * 0.25;
+      horn.play();
+    }
+    if (logOn) {
+      logtxt.innerHTML += "\nrot=" + av_yaw;
+    }
+    last_tm = tm;
   }
-  m_prev = m;
-  /*
-  h = norm([-g[1], g[0], 0]);
-  dip = Math.sqrt((Math.pow(g[0], 2) + Math.pow(g[1], 2)) /
-               (Math.pow(g[0], 2) + Math.pow(g[1], 2) + Math.pow(g[2], 2)));
-  dip = 90.0 - Math.acos(dip) * 180.0 / Math.PI;
-  stk = (450.0 - Math.atan2(dot(m, h), dot(m, cross(g, h))) * 180.0 / Math.PI) % 360.0;
-  stk180 = " (" + (stk > 180.0 ? stk - 180.0 : stk).toFixed(1) + 
-               " " + cpoints[Math.floor((stk + 112.5) / 45.0) % 8] + ")";
-  diptxt.innerHTML = "- strike: " + stk.toFixed(1) + stk180 +
-                     "\n- dip: " + dip.toFixed(1);
-
-  x = Math.max(-90, Math.min(90, x));
-  x += 90;
-  y += 90;
-
-  var ngl = Math.atan2(-h[1], -h[0]);
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, W, H);
-
-  ctx.translate(W/2, H/2);
-  ctx.rotate(-ngl);
-  ctx.beginPath();
-  ctx.moveTo(-W, 0);
-  ctx.lineTo(-25, 0);
-  ctx.lineTo(-10, 2.25 * dip);
-  ctx.lineTo(-22, 2.0 * dip);
-  ctx.lineTo(-3, 5.0 * dip);
-  ctx.lineTo(8, 2.5 * dip);
-  ctx.lineTo(18, 2.75 * dip);
-  ctx.lineTo(25, 0);
-  ctx.lineTo(W, 0);
-  ctx.lineTo(W, -H);
-  ctx.lineTo(-W, -H);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillText('Jilly Bean - Strikingly Dippy', -200, 0.5 * H); 
-
-  ngl = Math.PI * (z + 180.0) / 180.0;
-  var offx = W * (0.1 + 0.8 * y / 180); // switched x, y
-  var offy = H * (0.1 + 0.8 * x / 180);
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.translate(offx, offy);
-  ctx.rotate(-ngl);
-  ctx.beginPath();
-  ctx.moveTo(0, 50);
-  ctx.lineTo(-20, -50);
-  ctx.lineTo(20, -50);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  */ 
 }
 
 var onSuccess = function(position) {
@@ -191,14 +179,6 @@ var onSuccess = function(position) {
   latitude = position.coords.latitude;
   longitude = position.coords.longitude;
   altitude = position.coords.altitude;
-  /*alert('Latitude: ' + latitude + '\n' +
-        'Longitude: ' + longitude + '\n' +
-        'Altitude: ' + altitude);*/
-        /*'Accuracy: '          + position.coords.accuracy          + '\n' +
-        'Altitude Accuracy: ' + position.coords.altitudeAccuracy  + '\n' +
-        'Heading: '           + position.coords.heading           + '\n' +
-        'Speed: '             + position.coords.speed             + '\n' +
-        'Timestamp: '         + position.timestamp                + '\n');*/
 };
 
 function onError(error) {
@@ -217,6 +197,6 @@ function onDeviceReady() {
                 {maximumAge: 60000, timeout: 10000, enableHighAccuracy: true});
 }
 
-window.addEventListener('deviceorientation', handleOrientation);
+window.addEventListener('devicemotion', handleMotion);
 document.addEventListener('deviceready', onDeviceReady, false);
 //</script>
