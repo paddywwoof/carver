@@ -174,29 +174,29 @@ function handleMotion(event) {
   }
 }
 
-var onSuccess = function(position) {
+//var onSuccess = function(position) {
   ////////////////////////////////////////////////////////////////
-  latitude = position.coords.latitude;
-  longitude = position.coords.longitude;
-  altitude = position.coords.altitude;
-};
+//  latitude = position.coords.latitude;
+//  longitude = position.coords.longitude;
+//  altitude = position.coords.altitude;
+//};
 
-function onError(error) {
+//function onError(error) {
   ////////////////////////////////////////////////////////////////
-    alert('code: '    + error.code    + '\n' +
-          'message: ' + error.message + '\n');
-}
+//    alert('code: '    + error.code    + '\n' +
+//          'message: ' + error.message + '\n');
+//}
 
-function onDeviceReady() {
+//function onDeviceReady() {
   ////////////////////////////////////////////////////////////////
-  console.log("navigator.geolocation works well");
+//  console.log("navigator.geolocation works well");
   /*navigator.geolocation.getCurrentPosition(onSuccess, onError, 
                 {maximumAge: 60000, timeout: 5000, enableHighAccuracy: true});*/
   // getCurrentPosition() doesn't seem to work with GPS on android!
-  var watchId = navigator.geolocation.watchPosition(onSuccess, onError, 
-                {maximumAge: 60000, timeout: 10000, enableHighAccuracy: true});
-}
+//  var watchId = navigator.geolocation.watchPosition(onSuccess, onError, 
+//                {maximumAge: 60000, timeout: 10000, enableHighAccuracy: true});
+//}
 
 window.addEventListener('devicemotion', handleMotion);
-document.addEventListener('deviceready', onDeviceReady, false);
+//document.addEventListener('deviceready', onDeviceReady, false);
 //</script>
