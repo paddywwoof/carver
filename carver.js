@@ -1,6 +1,6 @@
 //<script type="javascript">
-var bell = document.querySelector('.bell');
-var horn = document.querySelector('.horn');
+var bell;// = document.querySelector('.bell');
+var horn;// = document.querySelector('.horn');
 var diptxt = document.querySelector('.diptxt');
 var logtxt = document.querySelector('.logtxt');
 diptxt.innerHTML = "+++";
@@ -194,5 +194,5 @@ function onDeviceReady() {
 }
 
 window.addEventListener('devicemotion', handleMotion);
-//document.addEventListener('deviceready', onDeviceReady, false);
+document.addEventListener('deviceready', onDeviceReady, false);
 //</script>
