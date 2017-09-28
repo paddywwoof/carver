@@ -155,7 +155,7 @@ function handleMotion(event) {
   var y = medianMean(ys, event.accelerationIncludingGravity.y);
   var z = medianMean(zs, event.accelerationIncludingGravity.z);
   q = taitBryanToQuat(0.01, 0.02, 0.03);//rx, ry, rz);
-  alert(" q " + q[0] + " " + q[1] + " " + q[2] + " " + q[3]);
+  alert(" acc " + x + " " + y + " " + z);
   var d = new Date();
   var tm = d.getTime();
   if (tm > (last_tm + WAIT)) {
