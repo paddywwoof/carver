@@ -162,11 +162,11 @@ function handleMotion(event) {
     var av_yaw = medianMean(yaw, 1000.0 * ax_a[0] * dot([x, y, z], [ax_a[3], ax_a[1], ax_a[2]]) / (tm - last_tm));
     diptxt.innerHTML = ">> yaw: " + av_yaw.toFixed(2);
     if (av_yaw > 0.66 && tm > (last_play + 200)) {
-      bell.volume = av_yaw * 0.25;
+      //bell.volume = av_yaw * 0.25;
       bell.play();
       last_play = tm;
     } else if (av_yaw < -0.66 && bell.ended && horn.ended) {
-      horn.volume = -av_yaw * 0.25;
+      //horn.volume = -av_yaw * 0.25;
       horn.play();
       last_play = tm;
     }
@@ -177,14 +177,21 @@ function handleMotion(event) {
   }
 }
 
-//function onDeviceReady() {
+function getPhoneGapPath() {
   ////////////////////////////////////////////////////////////////
-//  bell = new Media("res/bell.ogg");
-//  horn = new Media("res/horn.ogg");
-//  console.log(Media);
-//  alert('Media ready');
-//  bell.play();
-//}
+    var path = window.location.pathname;
+    path = path.substr( path, path.length - 10 );
+    return 'file://' + path;
+}
+
+function onDeviceReady() {
+  ////////////////////////////////////////////////////////////////
+  bell = new Media(getPhoneGapPath() + "bell.ogg");
+  horn = new Media(getPhoneGapPath() + "horn.ogg");
+  console.log(Media);
+  alert('Media ready');
+  bell.play();
+}
 
 window.addEventListener('devicemotion', handleMotion);
 //document.addEventListener('deviceready', onDeviceReady, false);
