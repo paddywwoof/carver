@@ -148,14 +148,14 @@ function axisAngle(q_in) {
 function handleMotion(event) {
   // rotation accelerometer and magnetometer changes /////////////
   ////////////////////////////////////////////////////////////////
-  //var rx = medianMean(xrs, event.rotationRate.beta);
-  //var ry = medianMean(yrs, event.rotationRate.gamma);
-  //var rz = medianMean(zrs, event.rotationRate.alpha);
+  var rx = medianMean(xrs, event.rotationRate.beta);
+  var ry = medianMean(yrs, event.rotationRate.gamma);
+  var rz = medianMean(zrs, event.rotationRate.alpha);
   var x = medianMean(xs, event.accelerationIncludingGravity.x);
   var y = medianMean(ys, event.accelerationIncludingGravity.y);
   var z = medianMean(zs, event.accelerationIncludingGravity.z);
-  q = taitBryanToQuat(0.01, 0.02, 0.03);//rx, ry, rz);
-  alert(" acc " + x + " " + y + " " + z);
+  q = taitBryanToQuat(rx, ry, rz);
+  //alert(" acc " + x + " " + y + " " + z);
   var d = new Date();
   var tm = d.getTime();
   if (tm > (last_tm + WAIT)) {
@@ -195,5 +195,9 @@ function onDeviceReady() {
 }
 
 window.addEventListener('devicemotion', handleMotion);
+window.addEventListener("compassneedscalibration",function(event) {
+      alert("ask user to wave device in a figure-eight motion");
+      event.preventDefault();
+}, true);
 document.addEventListener('deviceready', onDeviceReady, false);
 //</script>
