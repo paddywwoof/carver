@@ -148,16 +148,14 @@ function axisAngle(q_in) {
 function handleMotion(event) {
   // rotation accelerometer and magnetometer changes /////////////
   ////////////////////////////////////////////////////////////////
-  //var rx = medianMean(xrs, event.rotationRate.beta);
-  //var ry = medianMean(yrs, event.rotationRate.gamma);
-  //var rz = medianMean(zrs, event.rotationRate.alpha);
-  var rx = medianMean(xrs, event.acceleration.x); //test if rotationRate is the issue on phonegap
-  var ry = medianMean(yrs, event.acceleration.y);
-  var rz = medianMean(zrs, event.acceleration.z);
+  var rx = medianMean(xrs, event.rotationRate.beta);
+  var ry = medianMean(yrs, event.rotationRate.gamma);
+  var rz = medianMean(zrs, event.rotationRate.alpha);
   var x = medianMean(xs, event.accelerationIncludingGravity.x);
   var y = medianMean(ys, event.accelerationIncludingGravity.y);
   var z = medianMean(zs, event.accelerationIncludingGravity.z);
   q = taitBryanToQuat(rx, ry, rz);
+  //alert(" q " + q[0] + " " + q[1] + " " + q[2] + " " + q[3]);
   var d = new Date();
   var tm = d.getTime();
   if (tm > (last_tm + WAIT)) {
@@ -168,7 +166,7 @@ function handleMotion(event) {
       //bell.volume = av_yaw * 0.25;
       bell.play();
       last_play = tm;
-    } else if (av_yaw < -0.66 && bell.ended && horn.ended) {
+    } else if (av_yaw < -0.66 && tm > (last_play + 200)) {
       //horn.volume = -av_yaw * 0.25;
       horn.play();
       last_play = tm;
@@ -191,8 +189,8 @@ function onDeviceReady() {
   ////////////////////////////////////////////////////////////////
   bell = new Media(getPhoneGapPath() + "bell.ogg");
   horn = new Media(getPhoneGapPath() + "horn.ogg");
-  console.log(Media);
-  alert('Media ready');
+  //console.log(Media);
+  //alert('Media ready');
   bell.play();
 }
 
