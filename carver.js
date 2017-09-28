@@ -148,9 +148,12 @@ function axisAngle(q_in) {
 function handleMotion(event) {
   // rotation accelerometer and magnetometer changes /////////////
   ////////////////////////////////////////////////////////////////
-  var rx = medianMean(xrs, event.rotationRate.beta);
-  var ry = medianMean(yrs, event.rotationRate.gamma);
-  var rz = medianMean(zrs, event.rotationRate.alpha);
+  //var rx = medianMean(xrs, event.rotationRate.beta);
+  //var ry = medianMean(yrs, event.rotationRate.gamma);
+  //var rz = medianMean(zrs, event.rotationRate.alpha);
+  var rx = medianMean(xrs, event.acceleration.x); //test if rotationRate is the issue on phonegap
+  var ry = medianMean(yrs, event.acceleration.y);
+  var rz = medianMean(zrs, event.acceleration.z);
   var x = medianMean(xs, event.accelerationIncludingGravity.x);
   var y = medianMean(ys, event.accelerationIncludingGravity.y);
   var z = medianMean(zs, event.accelerationIncludingGravity.z);
