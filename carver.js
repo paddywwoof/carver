@@ -32,11 +32,12 @@ function logReading() {
 
 function calibrate() {
   ////////////////////////////////////////////////////////////////
-  xadj = medianMean(xrs, 0.0);
-  yadj = medianMean(yrs, 0.0);
-  zadj = Math.atan2(medianMean(zsrs, -1.0), medianMean(zcrs, 0.0)) + 0.5 * Math.PI;
-  gxadj += g[0];
-  gyadj += g[1];
+  //xadj = medianMean(xrs, 0.0);
+  //yadj = medianMean(yrs, 0.0);
+  //zadj = Math.atan2(medianMean(zsrs, -1.0), medianMean(zcrs, 0.0)) + 0.5 * Math.PI;
+  //gxadj += g[0];
+  //gyadj += g[1];
+  horn.play();
 }
 
 function medianMean(arr, val) {
@@ -182,6 +183,7 @@ function onDeviceReady() {
   horn = new Media("res/horn.ogg");
   console.log(Media);
   alert('Media ready');
+  bell.play();
 }
 
 window.addEventListener('devicemotion', handleMotion);
