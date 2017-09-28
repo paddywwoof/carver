@@ -148,13 +148,13 @@ function axisAngle(q_in) {
 function handleMotion(event) {
   // rotation accelerometer and magnetometer changes /////////////
   ////////////////////////////////////////////////////////////////
-  var rx = medianMean(xrs, event.rotationRate.beta);
-  var ry = medianMean(yrs, event.rotationRate.gamma);
-  var rz = medianMean(zrs, event.rotationRate.alpha);
+  //var rx = medianMean(xrs, event.rotationRate.beta);
+  //var ry = medianMean(yrs, event.rotationRate.gamma);
+  //var rz = medianMean(zrs, event.rotationRate.alpha);
   var x = medianMean(xs, event.accelerationIncludingGravity.x);
   var y = medianMean(ys, event.accelerationIncludingGravity.y);
   var z = medianMean(zs, event.accelerationIncludingGravity.z);
-  q = taitBryanToQuat(rx, ry, rz);
+  q = taitBryanToQuat(0.01, 0.02, 0.03);//rx, ry, rz);
   alert(" q " + q[0] + " " + q[1] + " " + q[2] + " " + q[3]);
   var d = new Date();
   var tm = d.getTime();
