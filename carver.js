@@ -1,10 +1,9 @@
 //<script type="javascript">
-var bell = document.querySelector('.bell');
-var horn = document.querySelector('.horn');
+var bell, horn; // Media not available until device ready
 
 var diptxt = document.querySelector('.diptxt');
 var logtxt = document.querySelector('.logtxt');
-diptxt.innerHTML = "<<oo>>";
+diptxt.innerHTML = "+++";
 logtxt.innerHTML = "---";
 
 var xrs = [], yrs = [], zrs = [];
@@ -21,6 +20,7 @@ var last_tm = 0;
 var WAIT = 100;
 var logOn = false;
 var nAlert = 0;
+var last_play = 0;
 
 function logReading() {
   ////////////////////////////////////////////////////////////////
@@ -160,12 +160,14 @@ function handleMotion(event) {
     var ax_a = axisAngle(q);
     var av_yaw = medianMean(yaw, 1000.0 * ax_a[0] * dot([x, y, z], [ax_a[3], ax_a[1], ax_a[2]]) / (tm - last_tm));
     diptxt.innerHTML = ">> yaw: " + av_yaw.toFixed(2);
-    if (av_yaw > 0.66 && bell.ended && horn.ended) {
-      bell.volume = av_yaw * 0.25;
+    if (av_yaw > 0.66 && tm > (last_play + 200)) {
+      bell.setVolume(av_yaw * 0.25);
       bell.play();
+      last_play = tm;
     } else if (av_yaw < -0.66 && bell.ended && horn.ended) {
-      horn.volume = -av_yaw * 0.25;
+      horn.setVolume(-av_yaw * 0.25);
       horn.play();
+      last_play = tm;
     }
     if (logOn) {
       logtxt.innerHTML += "\nrot=" + av_yaw;
@@ -174,29 +176,14 @@ function handleMotion(event) {
   }
 }
 
-//var onSuccess = function(position) {
+function onDeviceReady() {
   ////////////////////////////////////////////////////////////////
-//  latitude = position.coords.latitude;
-//  longitude = position.coords.longitude;
-//  altitude = position.coords.altitude;
-//};
-
-//function onError(error) {
-  ////////////////////////////////////////////////////////////////
-//    alert('code: '    + error.code    + '\n' +
-//          'message: ' + error.message + '\n');
-//}
-
-//function onDeviceReady() {
-  ////////////////////////////////////////////////////////////////
-//  console.log("navigator.geolocation works well");
-  /*navigator.geolocation.getCurrentPosition(onSuccess, onError, 
-                {maximumAge: 60000, timeout: 5000, enableHighAccuracy: true});*/
-  // getCurrentPosition() doesn't seem to work with GPS on android!
-//  var watchId = navigator.geolocation.watchPosition(onSuccess, onError, 
-//                {maximumAge: 60000, timeout: 10000, enableHighAccuracy: true});
-//}
+  bell = new Media("res/bell.ogg");
+  horn = new Media("res/horn.ogg");
+  console.log(Media);
+  alert('Media ready');
+}
 
 window.addEventListener('devicemotion', handleMotion);
-//document.addEventListener('deviceready', onDeviceReady, false);
+document.addEventListener('deviceready', onDeviceReady, false);
 //</script>
