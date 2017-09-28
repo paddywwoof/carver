@@ -7,4 +7,5 @@
     <icon src="res/android/icon96.png" density="xhdpi" />
     <icon src="res/android/icon144.png" density="xxhdpi" />
   </platform>
+  <plugin name="cordova-plugin-media" />
 </widget>
