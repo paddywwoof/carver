@@ -22,6 +22,9 @@ var logOn = false;
 var nAlert = 0;
 var last_play = 0;
 
+var alpha = 0.0, beta = 0.0, gamma = 0.0, last_ori = 0.0;
+var alpha_dt = 0.0, beta_dt = 0.0, gamma_dt = 0.0;
+
 function logReading() {
   ////////////////////////////////////////////////////////////////
   logOn = !logOn;
@@ -146,12 +149,27 @@ function axisAngle(q_in) {
   return [angle, axis[0], axis[1], axis[2]];
 }
 
+function handleOrientation(event) {
+  var d = new Date();
+  var tm = d.getTime();
+  var dt = tm - last_ori;
+  last_ori = tm;
+  var new_alpha = event.alpha;
+  var new_beta = event.beta;
+  var new_gamma = event.gamma;
+  alpha_dt = (new_alpha - alpha) / dt;
+  beta_dt = (new_beta - beta) / dt;
+  gamma_dt = (new_gamma - gamma) / dt;
+  alpha = new_alpha;
+  beta = new_beta;
+  gamma = new_gamma;
+}
 function handleMotion(event) {
   // rotation accelerometer and magnetometer changes /////////////
   ////////////////////////////////////////////////////////////////
-  var rx = medianMean(xrs, event.rotationRate.beta);
-  var ry = medianMean(yrs, event.rotationRate.gamma);
-  var rz = medianMean(zrs, event.rotationRate.alpha);
+  var rx = beta_dt; //medianMean(xrs, event.rotationRate.beta);
+  var ry = gamma_dt; //medianMean(yrs, event.rotationRate.gamma);
+  var rz = alpha_dt; //medianMean(zrs, event.rotationRate.alpha);
   var x = medianMean(xs, event.accelerationIncludingGravity.x);
   var y = medianMean(ys, event.accelerationIncludingGravity.y);
   var z = medianMean(zs, event.accelerationIncludingGravity.z);
@@ -197,6 +215,7 @@ function onDeviceReady() {
   bell.play();
 }
 
+window.addEventListener('deviceorientation', handleOrientation);
 window.addEventListener('devicemotion', handleMotion);
 window.addEventListener("compassneedscalibration", function(event) {
       alert("ask user to wave device in a figure-eight motion");
