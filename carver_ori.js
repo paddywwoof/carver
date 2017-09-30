@@ -24,6 +24,7 @@ var last_play = 0;
 
 var alpha = 0.0, beta = 0.0, gamma = 0.0, last_ori = 0.0;
 var alpha_dt = 0.0, beta_dt = 0.0, gamma_dt = 0.0;
+var MINDT = 5; // min millis for rotation
 
 function logReading() {
   ////////////////////////////////////////////////////////////////
@@ -150,22 +151,27 @@ function axisAngle(q_in) {
 }
 
 function handleOrientation(event) {
+  // rotation accelerometer and magnetometer changes /////////////
+  ////////////////////////////////////////////////////////////////
   var d = new Date();
   var tm = d.getTime();
   var dt = tm - last_ori;
-  last_ori = tm;
-  var new_alpha = event.alpha;
-  var new_beta = event.beta;
-  var new_gamma = event.gamma;
-  alpha_dt = (new_alpha - alpha) / dt;
-  beta_dt = (new_beta - beta) / dt;
-  gamma_dt = (new_gamma - gamma) / dt;
-  alpha = new_alpha;
-  beta = new_beta;
-  gamma = new_gamma;
+  if (dt > MINDT) {
+    last_ori = tm;
+    var new_alpha = event.alpha;
+    var new_beta = event.beta;
+    var new_gamma = event.gamma;
+    alpha_dt = (new_alpha - alpha) / dt;
+    beta_dt = (new_beta - beta) / dt;
+    gamma_dt = (new_gamma - gamma) / dt;
+    alpha = new_alpha;
+    beta = new_beta;
+    gamma = new_gamma;
+  }
 }
+
 function handleMotion(event) {
-  // rotation accelerometer and magnetometer changes /////////////
+  // linear and rotation accelerometer changes ///////////////////
   ////////////////////////////////////////////////////////////////
   var rx = beta_dt; //medianMean(xrs, event.rotationRate.beta);
   var ry = gamma_dt; //medianMean(yrs, event.rotationRate.gamma);
