@@ -24,7 +24,7 @@ var last_play = 0;
 
 var alpha = 0.0, beta = 0.0, gamma = 0.0, last_ori = 0.0;
 var alpha_dt = 0.0, beta_dt = 0.0, gamma_dt = 0.0;
-var MINDT = 5; // min millis for rotation
+var MINDT = 123; // min millis for rotation
 
 function logReading() {
   ////////////////////////////////////////////////////////////////
