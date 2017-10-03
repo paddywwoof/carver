@@ -8,4 +8,5 @@
     <icon src="res/android/icon144.png" density="xxhdpi" />
   </platform>
   <plugin name="cordova-plugin-media" />
+  <plugin name="cordova-plugin-device-motion" />
 </widget>

@@ -5,10 +5,14 @@
     <style file="carver.css"></style>
   </head>
   <body>
-    <button type='button' class='button' onClick='logReading()'>LOG THIS VALUE</button>
-    <pre class="diptxt"></pre>
-    <button type='button' class='button' onClick='calibrate()'>CALIBRATE (when flat and pointing North)</button>
-    <pre class="logtxt"></pre>
-    <script type="text/javascript" src="carver_ori.js"></script>
+    <audio class="bell"><source src="bell.ogg" type="audio/ogg"></audio>
+    <audio class="horn"><source src="horn.ogg" type="audio/ogg"></audio>
+    <audio class="fart"><source src="fart.ogg" type="audio/ogg"></audio>
+    <audio class="belch"><source src="belch.ogg" type="audio/ogg"></audio>
+    <pre class="diptxt">tba</pre><br />
+    <button type="button" class="noisebtn" onClick="logReading()">tba</button><br />
+    <button type="button" class="changebtn" onClick="changeNoises()">tba</button>
+    <pre class="logtxt">tba</pre>
+    <script type="text/javascript" src="carver.js"></script>
   </body>
 </html>

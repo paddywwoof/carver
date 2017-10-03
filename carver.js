@@ -1,50 +1,62 @@
 //<script type="javascript">
-var bell;
-var horn;
+var l_snd, r_snd;
+var changebtn = document.querySelector('.changebtn');
 var diptxt = document.querySelector('.diptxt');
 var logtxt = document.querySelector('.logtxt');
+var noisebtn = document.querySelector('.noisebtn');
 diptxt.innerHTML = "+++";
 logtxt.innerHTML = "---";
+noisebtn.innerHTML = "START NOISE";
+changeNoises();
 
 var xrs = [], yrs = [], zrs = [];
 var zcrs = [], zsrs = []; // hold as cos and sin to avoid jump 359 -> 0
 var xs = [], ys = [], zs = [];
 var yaw = [];
-//var xadj = 0.0, yadj = 0.0, zadj = 0.0; // angle offsets
-//var gxadj = 0.0, gyadj = 0.0; // g component offsets
 
 var q; // quaternion position of phone
-//var h; // unit vector horizontal in plane of phone
-//var latitude; var longitude; var altitude;
 var last_tm = 0;
-var WAIT = 100;
+var WAIT = 50;
 var logOn = false;
 var nAlert = 0;
 var last_play = 0;
+var noise_on = false;
 
 function logReading() {
   ////////////////////////////////////////////////////////////////
-  logOn = !logOn;
-  if (logOn) {
-    logtxt.innerHTML = "";
+  //logOn = !logOn;
+  //if (logOn) {
+  //  logtxt.innerHTML = "";
+  //}
+  noise_on = !noise_on;
+  if (noise_on) {
+    l_snd.play();
+    r_snd.play();
+    noisebtn.innerHTML = "STOP NOISE";
+  } else {
+    noisebtn.innerHTML = "START NOISE";
   }
-  bell.play();
 }
 
-function calibrate() {
-  ////////////////////////////////////////////////////////////////
-  //xadj = medianMean(xrs, 0.0);
-  //yadj = medianMean(yrs, 0.0);
-  //zadj = Math.atan2(medianMean(zsrs, -1.0), medianMean(zcrs, 0.0)) + 0.5 * Math.PI;
-  //gxadj += g[0];
-  //gyadj += g[1];
-  horn.play();
+function changeNoises() {
+  // re-allocate noises //////////////////////////////////////////
+  var noise_list = ['fart', 'belch', 'bell', 'horn']
+  var l_i = Math.floor(Math.random() * 3.9999);
+  var r_i = l_i;
+  while (r_i == l_i) {
+    r_i = Math.floor(Math.random() * 3.9999);
+  }
+  l_snd = document.querySelector('.' + noise_list[l_i]);
+  r_snd = document.querySelector('.' + noise_list[r_i]);
+  changebtn.innerHTML = 'CHANGE NOISES (from ' + noise_list[l_i] + ', ' + noise_list[r_i] + ')';
+  l_snd.play();
+  r_snd.play();
 }
 
 function medianMean(arr, val) {
   // return median of values /////////////////////////////////////
-  var NUM = 15;
-  var END = 2;
+  var NUM = 20;
+  var END = 3;
   if (arr.unshift(val) > NUM) {
     arr.pop();
   }
@@ -163,16 +175,18 @@ function handleMotion(event) {
     var ax_a = axisAngle(q);
     var av_yaw = medianMean(yaw, 1000.0 * ax_a[0] * dot([x, y, z], [ax_a[3], ax_a[1], ax_a[2]]) / (tm - last_tm));
     diptxt.innerHTML = ">> yaw: " + av_yaw.toFixed(2);
-    if (av_yaw > 0.66 && tm > (last_play + 200)) {
-      //bell.volume = av_yaw * 0.2;
-      bell.setVolume(av_yaw * 0.2);
-      bell.play();
-      last_play = tm;
-    } else if (av_yaw < -0.66 && tm > (last_play + 200)) {
-      //horn.volume = -av_yaw * 0.2;
-      horn.setVolume(-av_yaw * 0.2);
-      horn.play();
-      last_play = tm;
+    if (noise_on && tm > (last_play + 100)) {
+      if (av_yaw > 0.4) {
+        l_snd.volume = av_yaw * av_yaw * 0.1;
+        //l_snd.setVolume(av_yaw * 0.2);
+        l_snd.play();
+        last_play = tm;
+      } else if (av_yaw < -0.4) {
+        r_snd.volume = av_yaw * av_yaw * 0.1;
+        //r_snd.setVolume(-av_yaw * 0.2);
+        r_snd.play();
+        last_play = tm;
+      }
     }
     if (logOn) {
       logtxt.innerHTML += "\nrot=" + av_yaw;
@@ -190,11 +204,11 @@ function getPhoneGapPath() {
 
 function onDeviceReady() {
   ////////////////////////////////////////////////////////////////
-  bell = new Media(getPhoneGapPath() + "bell.ogg");
-  horn = new Media(getPhoneGapPath() + "horn.ogg");
+  //l_snd = new Media(getPhoneGapPath() + "bell.ogg");
+  //r_snd = new Media(getPhoneGapPath() + "horn.ogg");
   //console.log(Media);
   //alert('Media ready');
-  bell.play();
+  l_snd.play();
 }
 
 window.addEventListener('devicemotion', handleMotion);
